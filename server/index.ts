@@ -85,8 +85,8 @@ app.use((req, res, next) => {
   httpServer.listen(
     {
       port,
-      host: "127.0.0.1",
-      // reusePort: true, <--- DELETE THIS LINE OR ADD // TO COMMENT IT OUT
+      host: "0.0.0.0", // <--- CHANGE THIS back to 0.0.0.0 for Render!
+      reusePort: true,
     },
     () => {
       log(`serving on port ${port}`);
