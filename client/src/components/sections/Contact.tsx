@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
+import { useMutation } from "@tanstack/react-query";
 import {
   Form,
   FormControl,
@@ -26,12 +27,30 @@ const formSchema = z.object({
   message: z.string().min(10, { message: "Message must be at least 10 characters." }),
 });
 
+type FormData = z.infer<typeof formSchema>;
+
+async function submitContactForm(data: FormData) {
+  const response = await fetch("/api/contact", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(data),
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error || "Failed to send message");
+  }
+
+  return response.json();
+}
+
 export function Contact() {
   const { toast } = useToast();
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
-  const form = useForm<z.infer<typeof formSchema>>({
+  const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: "",
@@ -41,27 +60,30 @@ export function Contact() {
     },
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    setIsSubmitting(true);
-    
-    // Simulate API call / Email sending
-    setTimeout(() => {
-      setIsSubmitting(false);
+  const mutation = useMutation({
+    mutationFn: submitContactForm,
+    onSuccess: () => {
       setIsSuccess(true);
-      
       toast({
         title: "Message sent successfully!",
         description: "Thanks for reaching out. I'll get back to you within 24 hours.",
-        variant: "default", 
       });
-      
-      // Reset form after showing success message for a bit
       setTimeout(() => {
         setIsSuccess(false);
         form.reset();
-      }, 3000);
-      
-    }, 2000);
+      }, 5000);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Failed to send message",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  function onSubmit(values: FormData) {
+    mutation.mutate(values);
   }
 
   return (
@@ -82,7 +104,6 @@ export function Contact() {
         </motion.div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-          {/* Contact Info */}
           <motion.div
             initial={{ opacity: 0, x: -30 }}
             whileInView={{ opacity: 1, x: 0 }}
@@ -117,7 +138,6 @@ export function Contact() {
             </div>
           </motion.div>
 
-          {/* Contact Form */}
           <motion.div
             initial={{ opacity: 0, x: 30 }}
             whileInView={{ opacity: 1, x: 0 }}
@@ -146,7 +166,12 @@ export function Contact() {
                             <FormItem>
                               <FormLabel>Name</FormLabel>
                               <FormControl>
-                                <Input placeholder="John Doe" {...field} className="bg-background/50" />
+                                <Input 
+                                  placeholder="John Doe" 
+                                  {...field} 
+                                  className="bg-background/50" 
+                                  data-testid="input-name"
+                                />
                               </FormControl>
                               <FormMessage />
                             </FormItem>
@@ -159,7 +184,12 @@ export function Contact() {
                             <FormItem>
                               <FormLabel>Email</FormLabel>
                               <FormControl>
-                                <Input placeholder="john@example.com" {...field} className="bg-background/50" />
+                                <Input 
+                                  placeholder="john@example.com" 
+                                  {...field} 
+                                  className="bg-background/50" 
+                                  data-testid="input-email"
+                                />
                               </FormControl>
                               <FormMessage />
                             </FormItem>
@@ -174,7 +204,12 @@ export function Contact() {
                           <FormItem>
                             <FormLabel>Subject</FormLabel>
                             <FormControl>
-                              <Input placeholder="Project Inquiry" {...field} className="bg-background/50" />
+                              <Input 
+                                placeholder="Project Inquiry" 
+                                {...field} 
+                                className="bg-background/50" 
+                                data-testid="input-subject"
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -191,6 +226,7 @@ export function Contact() {
                               <Textarea 
                                 placeholder="Tell me about your project..." 
                                 className="min-h-[120px] bg-background/50"
+                                data-testid="input-message"
                                 {...field} 
                               />
                             </FormControl>
@@ -202,9 +238,10 @@ export function Contact() {
                       <Button 
                         type="submit" 
                         className="w-full bg-gradient-to-r from-primary to-secondary hover:opacity-90 transition-opacity"
-                        disabled={isSubmitting}
+                        disabled={mutation.isPending}
+                        data-testid="button-submit"
                       >
-                        {isSubmitting ? (
+                        {mutation.isPending ? (
                           <>
                             <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Sending...
                           </>
