@@ -46,7 +46,7 @@ interface ContactFormData {
   message: string;
 }
 
-const OWNER_EMAIL = "muhammadabdulwadudalata@gmail.com";
+const OWNER_EMAIL = "muhammadabdulwadudayinde@gmail.com";
 
 export async function sendContactEmails(data: ContactFormData): Promise<void> {
   const { client, fromEmail } = await getUncachableSendGridClient();
