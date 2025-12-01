@@ -1,5 +1,4 @@
 import { Github, Linkedin, Twitter, Mail, Phone, MapPin } from "lucide-react";
-import resumeAsset from "@assets/DevTech_Resume_1764586108597.docx";
 
 export const personalInfo = {
   name: "Muhammad Abdulwadud Ayinde",
@@ -98,4 +97,4 @@ export const projects = [
   }
 ];
 
-export const resumeUrl = resumeAsset;
+export const resumeUrl = "/DevTech_Resume.docx";
