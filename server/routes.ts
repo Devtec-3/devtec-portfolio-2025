@@ -12,6 +12,8 @@ export async function registerRoutes(
   
   app.post("/api/contact", async (req, res) => {
     try {
+      console.log('Contact form submission received:', req.body);
+      
       const validationResult = insertContactMessageSchema.safeParse(req.body);
       
       if (!validationResult.success) {
@@ -22,9 +24,11 @@ export async function registerRoutes(
       const contactData = validationResult.data;
 
       const savedMessage = await storage.createContactMessage(contactData);
+      console.log('Message saved to database:', savedMessage.id);
 
       try {
         await sendContactEmails(contactData);
+        console.log('✓ Emails sent successfully');
       } catch (emailError) {
         console.error("Failed to send emails:", emailError);
       }
